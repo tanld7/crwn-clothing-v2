@@ -22,8 +22,15 @@
     flex-direction: column;
     overflow: scroll;
   }
+  
+  // hide the scroll bar
+  ::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+  }
 
   button {
     margin-top: auto;
   }
+
+  
 }
