@@ -1,16 +1,26 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import {
-    getAuth,
-    signInWithRedirect,
-    signInWithPopup,
-    GoogleAuthProvider,
-    createUserWithEmailAndPassword,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-} from 'firebase/auth';
-import {getFirestore, doc, getDoc, setDoc} from 'firebase/firestore';
+  getAuth,
+  signInWithRedirect,
+  signInWithPopup,
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  // for creating collections and document into firestore from client
+  collection,
+  writeBatch,
+  query,
+  getDocs,
+} from "firebase/firestore";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -22,7 +32,7 @@ const firebaseConfig = {
   projectId: "crwn-clothing-db-56f53",
   storageBucket: "crwn-clothing-db-56f53.appspot.com",
   messagingSenderId: "1029845050311",
-  appId: "1:1029845050311:web:d0c04b6087878b628cafe2"
+  appId: "1:1029845050311:web:d0c04b6087878b628cafe2",
 };
 
 // Initialize Firebase
@@ -31,61 +41,109 @@ const firebaseApp = initializeApp(firebaseConfig);
 const googleProvider = new GoogleAuthProvider();
 
 googleProvider.setCustomParameters({
-    prompt: "select_account",
-})
+  prompt: "select_account",
+});
 
 export const auth = getAuth();
-export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
+export const signInWithGooglePopup = () =>
+  signInWithPopup(auth, googleProvider);
 
 export const db = getFirestore();
 
-export const createUserDocumentFromAuth = async (userAuth, additionalInfomation = {}) => {
-    /**
-     * Create user document in the firestore from Firebase Authentication. 
-     */
-    if (!userAuth) return;
+export const addCollectionAndDocuments = async (
+  collectionKey,
+  objectsToAdd
+) => {
+  /**
+   * This is a one-time use function to upload local data into firestore
+   *  */
+  const collectionRef = collection(db, collectionKey);
+  const batch = writeBatch(db);
 
-    const userDocRef = doc(db, 'users', userAuth.uid)
-    const userSnapshot = await getDoc(userDocRef)
+  objectsToAdd.forEach((object) => {
+    const docRef = doc(collectionRef, object.title.toLowerCase());
+    batch.set(docRef, object);
+  });
 
-    // if user data (snapshot) does not exist,
-    // create/set the document with the data from userAuth in my collection.
-    if (!userSnapshot.exists()) {
-        const {displayName, email} = userAuth;
-        const createdAt = new Date();
+  await batch.commit();
+  console.log("done");
+};
 
-        try {
-            await setDoc(userDocRef, {
-                displayName,
-                email,
-                createdAt,
-                ...additionalInfomation
-            });
-        } catch (error) {
-            console.log('error creating the user', error.message);
-        }   
+export const getCategoriesAndDocuments = async () => {
+  // Using collection to point to the collection (categories) in the Firestore database
+  const collectionRef = collection(db, "categories");
+
+  // create a query object (q) that will be used to retrieve the data from the collectionRef
+  const q = query(collectionRef);
+
+  // Now get the snapshot of data in the collectionRef as a QuerySnapshot object named querySnapshot.
+  const querySnapshot = await getDocs(q);
+
+  // querySnapshot.docs is a property that returns array of QueryDocumentSnapshot object.
+  // Later, we can call .data() on a single document (docSnapshot) to get the real data.
+  // The accumulator parameter is an object that accumulates the results of each iteration.
+  // In each iteration, the function sets the 'title' field as a key in the `categoryMap` object and the `items` field as its corresponding value.
+  const categoryMap = querySnapshot.docs.reduce((accumulator, docSnapshot) => {
+    const { title, items } = docSnapshot.data();
+
+    accumulator[title.toLowerCase()] = items;
+
+    return accumulator;
+  }, {});
+
+  return categoryMap;
+};
+
+export const createUserDocumentFromAuth = async (
+  userAuth,
+  additionalInfomation = {}
+) => {
+  /**
+   * Create user document in the firestore from Firebase Authentication.
+   */
+  if (!userAuth) return;
+
+  const userDocRef = doc(db, "users", userAuth.uid);
+  const userSnapshot = await getDoc(userDocRef);
+
+  // if user data (snapshot) does not exist,
+  // create/set the document with the data from userAuth in my collection.
+  if (!userSnapshot.exists()) {
+    const { displayName, email } = userAuth;
+    const createdAt = new Date();
+
+    try {
+      await setDoc(userDocRef, {
+        displayName,
+        email,
+        createdAt,
+        ...additionalInfomation,
+      });
+    } catch (error) {
+      console.log("error creating the user", error.message);
     }
+  }
 
-    // if user data exists, return userDocRef
-    return userDocRef;
-}
+  // if user data exists, return userDocRef
+  return userDocRef;
+};
 
 export const createAuthUserWithEmailAndPassword = async (email, password) => {
-    if (!email || !password) return;
-    
-    return await createUserWithEmailAndPassword(auth, email, password);
+  if (!email || !password) return;
+
+  return await createUserWithEmailAndPassword(auth, email, password);
 };
 
 export const signInAuthUserWithEmailAndPassword = async (email, password) => {
-    if (!email || !password) return;
+  if (!email || !password) return;
 
-    return await signInWithEmailAndPassword(auth, email, password);
-}
+  return await signInWithEmailAndPassword(auth, email, password);
+};
 
 export const signOutUser = async () => {
-    return await signOut(auth);
-}
+  return await signOut(auth);
+};
 
 export const onAuthStateChangedListener = (callback) => {
-    return onAuthStateChanged(auth, callback)
-} 
+  return onAuthStateChanged(auth, callback);
+};
