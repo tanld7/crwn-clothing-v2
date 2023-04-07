@@ -2,7 +2,7 @@
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
-  signInWithRedirect,
+  // signInWithRedirect,
   signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
@@ -78,20 +78,7 @@ export const getCategoriesAndDocuments = async () => {
 
   // Now get the snapshot of data in the collectionRef as a QuerySnapshot object named querySnapshot.
   const querySnapshot = await getDocs(q);
-
-  // querySnapshot.docs is a property that returns array of QueryDocumentSnapshot object.
-  // Later, we can call .data() on a single document (docSnapshot) to get the real data.
-  // The accumulator parameter is an object that accumulates the results of each iteration.
-  // In each iteration, the function sets the 'title' field as a key in the `categoryMap` object and the `items` field as its corresponding value.
-  const categoryMap = querySnapshot.docs.reduce((accumulator, docSnapshot) => {
-    const { title, items } = docSnapshot.data();
-
-    accumulator[title.toLowerCase()] = items;
-
-    return accumulator;
-  }, {});
-
-  return categoryMap;
+  return querySnapshot.docs.map((docSnapshot) => docSnapshot.data());
 };
 
 export const createUserDocumentFromAuth = async (
