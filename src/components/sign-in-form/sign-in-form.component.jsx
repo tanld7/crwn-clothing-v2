@@ -20,6 +20,11 @@ const SignInForm = () => {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { email, password } = formFields;
 
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setFormFields({ ...formFields, [name]: value });
+  };
+
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
   };
@@ -51,11 +56,6 @@ const SignInForm = () => {
           console.log(error);
       }
     }
-  };
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setFormFields({ ...formFields, [name]: value });
   };
 
   return (
