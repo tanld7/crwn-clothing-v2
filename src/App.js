@@ -2,14 +2,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 
-import {
-  onAuthStateChangedListener,
-  createUserDocumentFromAuth,
-  getCurrentUser,
-} from "./utils/firebase/firebase.utils";
-
-import { createAction } from "./utils/reducer/reducer.utils";
-
 import { Routes, Route } from "react-router-dom";
 
 // Components
@@ -21,13 +13,13 @@ import Shop from "./routes/shop/shop.component";
 import Checkout from "./routes/checkout/checkout.component";
 
 //
-import { setCurrentUser } from "./store/user/user.action";
+import { checkUserSession, setCurrentUser } from "./store/user/user.action";
 
 const App = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    getCurrentUser().then((user) => console.log(user));
+    dispatch(checkUserSession());
   }, []);
 
   return (
