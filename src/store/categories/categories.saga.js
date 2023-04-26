@@ -7,7 +7,7 @@ import {
   fetchCategoriesFailed,
 } from "./categories.action";
 
-import CATEGORIES_ACTION_TYPES from "./categories.types";
+import { CATEGORIES_ACTION_TYPES } from "./categories.types";
 
 export function* fetchCategoriesAsync() {
   try {
